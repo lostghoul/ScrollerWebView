@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/WebViewScroller.iml" filepath="$PROJECT_DIR$/WebViewScroller.iml" />
+      <module fileurl="file://$PROJECT_DIR$/webviewscroller/webviewscroller.iml" filepath="$PROJECT_DIR$/webviewscroller/webviewscroller.iml" />
+    </modules>
+  </component>
+</project>
