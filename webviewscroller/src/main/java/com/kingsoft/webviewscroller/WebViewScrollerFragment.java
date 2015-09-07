@@ -1,9 +1,13 @@
 package com.kingsoft.webviewscroller;
 
 import android.app.Fragment;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.http.SslError;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,23 +15,36 @@ import android.webkit.SslErrorHandler;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.ListView;
+import android.widget.LinearLayout;
+import android.widget.Toast;
 
 /**
  * Created by sunshaogang on 9/7/15.
  */
-public class WebViewScrollerFragment extends Fragment {
+public class WebViewScrollerFragment extends Fragment  implements RefreshableView.RefreshListener{
 
     private String homepageUrl = "https://www.baidu.com";
-    private View mRootView;
+    private BottomScrollView mScrollView;
     private WebView mWebView;
-    private ListView mListView;
+    private LinearLayout mCommentsLayout;
+    private RefreshableView mRefreshableView;
+    private Context mContext;
+
+    Handler handler = new Handler() {
+        public void handleMessage(Message message) {
+            super.handleMessage(message);
+            mRefreshableView.finishRefresh();
+            Toast.makeText(mContext, R.string.toast_text, Toast.LENGTH_SHORT).show();
+        }
+    };
+
     public WebViewScrollerFragment() {
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mContext = getActivity();
     }
 
     @Override
@@ -52,18 +69,26 @@ public class WebViewScrollerFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        mRootView = inflater.inflate(R.layout.webview_scroller_fragment, container, false);
-        mWebView = (WebView) mRootView.findViewById(R.id.article_content);
-        mListView = (ListView) mRootView.findViewById(R.id.article_comments);
+        mRefreshableView = (RefreshableView) inflater.inflate(R.layout.webview_scroller_fragment, container, false);
+        mScrollView = (BottomScrollView) mRefreshableView.findViewById(R.id.scrollview);
+        mScrollView.setOnScrollToBottomLintener(new BottomScrollView.OnScrollToBottomListener() {
+            @Override
+            public void onScrollBottomListener(boolean isBottom) {
+                Log.e("ssg", "isbottom = " + isBottom);
+                mRefreshableView.setScrollBottom(isBottom);
+            }
+        });
+        mWebView = (WebView) mRefreshableView.findViewById(R.id.article_content);
+        mCommentsLayout = (LinearLayout) mRefreshableView.findViewById(R.id.article_comments);
         initWebView();
-        return mRootView;
+        init();
+        return mRefreshableView;
     }
+
     private void initWebView() {
         mWebView.setVerticalScrollBarEnabled(false);
         mWebView.setHorizontalScrollBarEnabled(false);
         mWebView.getSettings().setJavaScriptEnabled(true);
-
-//        //
         mWebView.getSettings().setRenderPriority(WebSettings.RenderPriority.HIGH);
         mWebView.getSettings().setCacheMode(WebSettings.LOAD_DEFAULT);
 //        // 开启 DOM storage API 功能
@@ -72,7 +97,6 @@ public class WebViewScrollerFragment extends Fragment {
         mWebView.getSettings().setDatabaseEnabled(true);
 //        //开启 Application Caches 功能
         mWebView.getSettings().setAppCacheEnabled(true);
-//        //
 //        mWebView.addJavascriptInterface(new FeedbackJSCallback(), JAVA_SCRIPT_OBJECT_NAME);
         mWebView.loadUrl(homepageUrl);
         mWebView.setWebViewClient(new WebViewClient() {
@@ -94,7 +118,7 @@ public class WebViewScrollerFragment extends Fragment {
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
-                mListView.setVisibility(View.VISIBLE);
+                mCommentsLayout.setVisibility(View.VISIBLE);
                 if (!homepageUrl.equals(url)){
 //                    hideButtonsLayout();
                 } else {
@@ -126,4 +150,21 @@ public class WebViewScrollerFragment extends Fragment {
 //            }
 //        });
     }
+
+    private void init() {
+        initView();
+    }
+    private void initView() {
+        initData();
+    }
+    private void initData() {
+        mRefreshableView.setRefreshListener(this);
+    }
+
+    //实现刷新RefreshListener 中方法
+    public void onRefresh(RefreshableView view) {
+        //伪处理
+        handler.sendEmptyMessageDelayed(1, 2000);
+    }
+
 }
